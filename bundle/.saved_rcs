@@ -1,0 +1,176 @@
+# Last editied Jun 23 '17
+
+# --- VARIABLES ---
+# Colors for adding colorful echos easier
+BLK="\033[0;30m"
+RED="\033[1;31m"
+GRN="\033[0;32m"
+YEL="\033[0;33m"
+BLU="\033[0;34m"
+PRP="\033[0;35m"
+CYN="\033[0;36m"
+GRY="\033[0;37m"
+WHT="\033[0;38m"
+RST="\033[0m"
+
+# --- FUNCTIONS ---
+# ---- Function for Accessing Pitt's Unix Stuff ----
+function punix {
+    ssh was42@unixs.cis.pitt.edu
+}
+
+# ---- Function for adding things to the path ----
+function add_to_path_front {
+    if [[ $PATH != *"$1"* ]]
+    then
+           export PATH="$1:${PATH}"
+    fi
+}
+
+function addtopath_back {
+    if [[ $PATH != *"$1"* ]]
+    then
+           export PATH="${PATH}:$1"
+    fi
+}
+
+# ---- Function for going back to the old directories ----
+function back { # simple switch for back and forth movement
+        cd "$OLDPWD"
+}
+
+# ---- Function for creating new rust projects ----
+function rustproj {
+    if [[ "$#" == "0" ]]
+    then
+        echo -e "Usage:$GRN rustproj $RST$PRP project-name $RST[bin|lib]"
+        return 0
+    elif  [[ "$#" == "1" ]]
+    then
+        echo -n "Would you like a bin or a lib? "
+        read input
+    else
+        input=$2
+    fi
+
+    if [[ "$input" =~ "bin" ]]
+    then
+        (cargo new -q --bin $1 && echo "Bin selected.") || (echo "${RED}Error$RST: cargo ran into a problem building your project..."; return 1)
+    elif [[ "$input" == "lib" ]]
+    then
+        (cargo new -q --lib $1 && echo "Lib selected.") || (echo "${RED}Error$RST: cargo ran into a problem building your project..."; return 1)
+    else
+        echo "Sorry, didn't understand your input!"
+        return 1
+    fi
+    echo -e "Project created succesfully, cding to it now!"
+    cd $1/src
+    return 0
+}
+
+function savercs { # round up all of the rcs! :)
+    rcs=(".vimrc" ".inputrc" ".bash_profile")
+    for rc in ${rcs[@]}
+    do
+        (cp "$HOME/$rc" .saved_rcs && echo -e "${BLU}Saved $RST $rc") || echo -e "${RED}Error$RST: could not save $rc"
+    done
+}
+
+function wctot {
+    if [[ "$#" == "0" ]]
+    then
+        total=$(wc -l *  | sed -E "s/([0-9]+) [a-z.A-Z0-9]+/\1/" |paste -sd+ -| bc)
+
+    elif [[ "$#" == "1" ]]
+    then
+        total=$(wc -l "$1" | sed -E "s/([0-9]+) [a-z.A-Z0-9]+/\1/" |paste -sd+ -| bc)
+
+    elif [[ "$#" > 1 ]]
+    then
+        total=$(wc "$@" | sed -E "s/([0-9]+) [a-z.A-Z0-9]+/\1/" |paste -sd+ -| bc)
+
+    fi
+    echo $total
+}
+
+# --- BASH CUSTOMIZATION --
+export PS1='\h:\W \u\$ ' # customize the command variables to be easier to use
+export PS2='>>> '
+if [[ "$TERM" =~ 256color ]]; then
+        export PS1='\[\e[0;31m\]\h\[\e[0m\]:\[\e[0;34m\]\W\[\e[0m\] \u\$ ' # add color
+        export PS2='>>> '
+fi
+
+# --- ALIASES AND MISCELLANEOUS ---
+# ---- verbose regular command Aliases ----
+alias rm='rm -i' # make sure rm asks nicely before doing anything, can be disabled with -f
+alias cp='cp -v' # make sure cp says what it's doing
+alias c='clear'
+alias mkdir='mkdir -p' # Helpful if I want to create a series of folders (i.e.) some/folder/with/inner_folders
+alias bk='back' # alias so the back function is quicker to use
+alias cf='cd ~/Desktop/Code-Related-Files'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../../'
+
+# ---- ls Aliases ----
+alias ll='ls -l '
+alias la='ls -A '
+alias l@='ls -l@ '
+alias lsd='ls -l | grep "^d" ' # List all directories
+alias lh='ls -a | grep "^\." ' # List all hidden files etc.
+alias lv='ls -1 ' # List everything vertically
+alias lsg='ls | grep '
+
+# ---- git Aliases ----
+alias gs='git status '
+alias gp='git push '
+alias gc='git commit -a -m '
+alias ga='git add '
+alias gd='git diff '
+alias gl='git log '
+
+# ---- python Aliases ----
+alias ve='virtualenv ' # making it easier to setup a virtualenv
+alias de='deactivate ' # making it easier to turn off a virtualenv
+
+# ---- editing Aliases ----
+alias brc='vim ~/.bash_profile'
+alias vrc='vim ~/.vimrc'
+
+alias ve='virtualenv ' # making it easier to setup a virtualenv
+# ---- ls Colors ----
+export CLICOLOR=1 # Tell ls to be colorful
+export LSCOLORS=Exfxcxdxbxegedabagacad # defining the specific colors for ls
+
+# ---- vim Related Stuff ----
+alias v=vim
+set -o vi
+export EDITOR=~/opt/local/bin/vim
+
+# ---- Rust Related Stuff ----
+alias cb='cargo build'
+alias cbr='cargo build --release'
+alias cr='cargo run'
+alias crr='cargo run --release'
+export RUST_BACKTRACE=1
+
+# ---- Miscellaneous Shell Stuff ---
+export FIGNORE=".un~:.swp:$FIGNORE"
+export LESSHISTFILE=/dev/null
+
+######################################################################################################
+# ------------ THIS IS NOT NECESSARY IF DEFAULTING TO REGULAR MAC VIM (Preinstalled) ---------
+######################################################################################################
+add_to_path_front ~/opt/local/bin
+export VIMRUNTIME=/Users/willsumner/opt/local/share/vim/vim80
+######################################################################################################
+######################################################################################################
+
+# ---- Important Other Stuff (not put here by me)  ----
+#export PATH="/Library/Frameworks/Python.framework/Versions/3.5/bin:${PATH}"
+add_to_path_front /Library/Frameworks/Python.framework/Versions/3.5/bin
+
+# --- Updating PATH for use with RUST ---
+#export PATH="$HOME/.cargo/bin:$PATH"
+add_to_path_front ~/.cargo/bin
